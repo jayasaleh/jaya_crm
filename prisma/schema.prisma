@@ -13,7 +13,6 @@ datasource db {
 enum Role {
   SALES
   MANAGER
-  ADMIN
 }
 
 enum LeadStatus {
@@ -86,15 +85,15 @@ model Lead {
   name          String
   contact       String
   email         String?
-  address       String?           // REQUIRED by specs but missing
-  needs         String?           // REQUIRED by specs but missing
+  address       String?          
+  needs         String?          
   source        LeadSource        @default(OTHER)
   status        LeadStatus        @default(NEW)
   
   owner         User              @relation(fields: [ownerId], references: [id], onDelete: Restrict)
-  ownerId       Int               // Should NOT be nullable - every lead needs owner
+  ownerId       Int              
   
-  // Conversion tracking
+ 
   convertedAt   DateTime?
   customer      Customer?         @relation(fields: [customerId], references: [id])
   customerId    Int?              @unique
@@ -115,14 +114,14 @@ model Lead {
 // ------------------------------------
 model Customer {
   id          Int               @id @default(autoincrement())
-  customerCode String           @unique @default(cuid()) // Auto-generated code
+  customerCode String           @unique @default(cuid()) 
   name        String
   contact     String?
   email       String?
   address     String?
   city        String?
   
-  lead        Lead?             // Link back to original lead
+  lead        Lead?             
   deals       Deal[]
   services    Service[]
   
@@ -315,15 +314,13 @@ model ActivityLog {
   userId      Int?
   
   // What was changed
-  objectType  String            // "Lead", "Deal", "Customer", etc.
+  objectType  String          
   objectId    Int?
-  action      String            // "created", "updated", "deleted", "status_changed"
+  action      String          
   
-  // Additional context
-  details     Json?             // Store old/new values
+  details     Json?             
   ipAddress   String?
   
-  // Relations for easier querying
   lead        Lead?             @relation(fields: [leadId], references: [id], onDelete: Cascade)
   leadId      Int?
   
@@ -344,11 +341,11 @@ model ActivityLog {
 // ------------------------------------
 model ReportCache {
   id          Int       @id @default(autoincrement())
-  reportType  String    // "sales_summary", "conversion_rate", etc.
+  reportType  String   
   startDate   DateTime?
   endDate     DateTime?
-  filters     Json?     // Additional filters applied
-  data        Json      // Cached report data
+  filters     Json?    
+  data        Json      
   
   createdAt   DateTime  @default(now())
   expiresAt   DateTime?
