@@ -33,7 +33,7 @@ export async function registerUser(input: {
   const accessToken = signAccessToken({ userId: user.id, role: user.role });
   const refreshToken = signRefreshToken({ userId: user.id });
 
-  // Optionally persist refresh token (for stricter logout) — omitted for simplicity
+ 
 
   return {
     user: { id: user.id, name: user.name, email: user.email, role: user.role },

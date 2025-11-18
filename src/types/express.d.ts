@@ -1,10 +1,11 @@
-import { User } from '@prisma/client';
-
+import { User } from "@prisma/client";
 
 declare global {
-namespace Express {
-interface Request {
-user?: Partial<User> & { id: number };
+  namespace Express {
+    interface Request {
+      user?: Partial<User> & { id: number };
+    }
+  }
 }
-}
-}
+
+export {}

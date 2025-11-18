@@ -9,6 +9,6 @@ const router = Router();
 router.post("/register", validate(registerSchema), asyncHandler(controller.register));
 router.post("/login", validate(loginSchema), asyncHandler(controller.login));
 router.post("/refresh", asyncHandler(controller.refresh));
-router.get("/me", requireAuth, asyncHandler(controller.me));
+// router.get("/me", requireAuth, asyncHandler(controller.me));
 
 export default router;
