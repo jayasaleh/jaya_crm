@@ -1,0 +1,358 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ------------------------------------
+// Enums
+// ------------------------------------
+enum Role {
+  SALES
+  MANAGER
+  ADMIN
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CONVERTED
+  LOST
+}
+
+enum LeadSource {
+  WEBSITE
+  WALKIN
+  PARTNER
+  REFERRAL
+  OTHER
+}
+
+enum DealStatus {
+  DRAFT
+  WAITING_APPROVAL
+  APPROVED
+  REJECTED
+  WON
+  LOST
+}
+
+enum ServiceStatus {
+  ACTIVE
+  SUSPENDED
+  TERMINATED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ------------------------------------
+// User Model
+// ------------------------------------
+model User {
+  id                Int                 @id @default(autoincrement())
+  name              String
+  email             String              @unique
+  password          String
+  role              Role                @default(SALES)
+  isActive          Boolean             @default(true)
+  
+  // Relations
+  leads             Lead[]
+  deals             Deal[]
+  activities        ActivityLog[]
+  requestedApprovals PriceApproval[]    @relation("RequestedBy")
+  givenApprovals    PriceApproval[]     @relation("ApprovedBy")
+  
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@index([email])
+  @@index([role])
+}
+
+// ------------------------------------
+// Lead Model
+// ------------------------------------
+model Lead {
+  id            Int               @id @default(autoincrement())
+  name          String
+  contact       String
+  email         String?
+  address       String?           // REQUIRED by specs but missing
+  needs         String?           // REQUIRED by specs but missing
+  source        LeadSource        @default(OTHER)
+  status        LeadStatus        @default(NEW)
+  
+  owner         User              @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  ownerId       Int               // Should NOT be nullable - every lead needs owner
+  
+  // Conversion tracking
+  convertedAt   DateTime?
+  customer      Customer?         @relation(fields: [customerId], references: [id])
+  customerId    Int?              @unique
+  
+  deal          Deal?
+  activities    ActivityLog[]
+  
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ------------------------------------
+// Customer Model
+// ------------------------------------
+model Customer {
+  id          Int               @id @default(autoincrement())
+  customerCode String           @unique @default(cuid()) // Auto-generated code
+  name        String
+  contact     String?
+  email       String?
+  address     String?
+  city        String?
+  
+  lead        Lead?             // Link back to original lead
+  deals       Deal[]
+  services    Service[]
+  
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([customerCode])
+}
+
+// ------------------------------------
+// Product Model (Internet Packages)
+// ------------------------------------
+model Product {
+  id              Int               @id @default(autoincrement())
+  code            String?           @unique
+  name            String
+  description     String?
+  
+  // REQUIRED by specs: HPP, margin, selling price
+  hpp             Decimal           @db.Decimal(15, 2) // Base cost
+  marginPercent   Decimal           @default(20.00) @db.Decimal(5, 2) // Profit margin
+  sellingPrice    Decimal           @db.Decimal(15, 2) // Auto-calculated: hpp * (1 + marginPercent/100)
+  
+  // Optional specs for ISP
+  speedMbps       Int?
+  bandwidth       String?
+  
+  isActive        Boolean           @default(true)
+  
+  dealItems       DealItem[]
+  services        Service[]
+  
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([code])
+  @@index([isActive])
+}
+
+// ------------------------------------
+// Deal Model (Pipeline)
+// ------------------------------------
+model Deal {
+  id            Int               @id @default(autoincrement())
+  dealNumber    String            @unique @default(cuid()) // Auto-generated
+  
+  lead          Lead?             @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  leadId        Int?              @unique
+  
+  customer      Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerId    Int?
+  
+  owner         User              @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  ownerId       Int               // Should NOT be nullable
+  
+  title         String?
+  description   String?
+  totalAmount   Decimal           @default(0.00) @db.Decimal(15, 2)
+  
+  // Status according to specs: waiting_approval, approved, rejected
+  status        DealStatus        @default(DRAFT)
+  
+  // Timestamps for status changes
+  submittedAt   DateTime?         // When submitted for approval
+  approvedAt    DateTime?
+  rejectedAt    DateTime?
+  wonAt         DateTime?
+  lostAt        DateTime?
+  
+  notes         String?
+  
+  items         DealItem[]
+  approvals     PriceApproval[]
+  activities    ActivityLog[]
+  
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([dealNumber])
+  @@index([customerId])
+  @@index([createdAt])
+}
+
+// ------------------------------------
+// Deal Item Model (Multi-product per deal)
+// ------------------------------------
+model DealItem {
+  id              Int               @id @default(autoincrement())
+  
+  deal            Deal              @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  dealId          Int
+  
+  product         Product           @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productId       Int
+  
+  quantity        Int               @default(1)
+  standardPrice   Decimal           @db.Decimal(15, 2) // Product selling price at time
+  agreedPrice     Decimal           @db.Decimal(15, 2) // Negotiated price
+  discount        Decimal           @default(0.00) @db.Decimal(5, 2) // Percentage
+  subtotal        Decimal           @default(0.00) @db.Decimal(15, 2) // agreedPrice * quantity
+  
+  // Flag if this item needs approval (agreedPrice < standardPrice)
+  needsApproval   Boolean           @default(false)
+  
+  approval        PriceApproval?
+  
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([dealId])
+  @@index([productId])
+}
+
+// ------------------------------------
+// Price Approval Model
+// ------------------------------------
+model PriceApproval {
+  id              Int               @id @default(autoincrement())
+  
+  dealItem        DealItem          @relation(fields: [dealItemId], references: [id], onDelete: Cascade)
+  dealItemId      Int               @unique
+  
+  deal            Deal              @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  dealId          Int
+  
+  requestedBy     User              @relation("RequestedBy", fields: [requestedById], references: [id], onDelete: Restrict)
+  requestedById   Int
+  
+  approvedBy      User?             @relation("ApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  approvedById    Int?
+  
+  // Approval details
+  requestedPrice  Decimal           @db.Decimal(15, 2)
+  standardPrice   Decimal           @db.Decimal(15, 2)
+  discountAmount  Decimal           @db.Decimal(15, 2)
+  reason          String?           // Why requesting discount
+  
+  status          ApprovalStatus    @default(PENDING)
+  decisionNote    String?           // Manager's note
+  
+  requestedAt     DateTime          @default(now())
+  decidedAt       DateTime?
+
+  @@index([status])
+  @@index([requestedById])
+  @@index([approvedById])
+  @@index([dealId])
+}
+
+// ------------------------------------
+// Service Model (Active subscriptions)
+// ------------------------------------
+model Service {
+  id              Int               @id @default(autoincrement())
+  
+  customer        Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId      Int
+  
+  product         Product           @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productId       Int
+  
+  monthlyFee      Decimal           @db.Decimal(15, 2)
+  installationFee Decimal?          @db.Decimal(15, 2)
+  
+  startDate       DateTime          @default(now())
+  endDate         DateTime?
+  status          ServiceStatus     @default(ACTIVE)
+  
+  // Installation details
+  installationAddress String?
+  installationNotes   String?
+  
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([customerId])
+  @@index([status])
+  @@index([startDate])
+}
+
+// ------------------------------------
+// Activity Log Model (Audit trail)
+// ------------------------------------
+model ActivityLog {
+  id          Int               @id @default(autoincrement())
+  
+  user        User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId      Int?
+  
+  // What was changed
+  objectType  String            // "Lead", "Deal", "Customer", etc.
+  objectId    Int?
+  action      String            // "created", "updated", "deleted", "status_changed"
+  
+  // Additional context
+  details     Json?             // Store old/new values
+  ipAddress   String?
+  
+  // Relations for easier querying
+  lead        Lead?             @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  leadId      Int?
+  
+  deal        Deal?             @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  dealId      Int?
+  
+  createdAt   DateTime          @default(now())
+
+  @@index([userId])
+  @@index([objectType, objectId])
+  @@index([leadId])
+  @@index([dealId])
+  @@index([createdAt])
+}
+
+// ------------------------------------
+// Report Cache Model (Performance optimization)
+// ------------------------------------
+model ReportCache {
+  id          Int       @id @default(autoincrement())
+  reportType  String    // "sales_summary", "conversion_rate", etc.
+  startDate   DateTime?
+  endDate     DateTime?
+  filters     Json?     // Additional filters applied
+  data        Json      // Cached report data
+  
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime?
+
+  @@index([reportType, startDate, endDate])
+  @@index([expiresAt])
+}
