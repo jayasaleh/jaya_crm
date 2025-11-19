@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { email, z } from "zod";
 
 // Untuk params (misal: /:id)
 export const idParamSchema = z.object({
@@ -8,7 +8,9 @@ export const idParamSchema = z.object({
 // Schema untuk BODY — langsung, seperti registerSchema
 export const createLeadSchema = z.object({
   name: z.string().min(1, "Lead name is required"),
-  contact: z.string().min(5, "Contact is required"),  
+  contact: z.string().min(5, "Contact is required"),
+  email: z.string().email("Invalid email address").optional(),
+  city: z.string().optional(),  
   address: z.string().min(3, "Address is required"),
   needs: z.string().min(3, "Needs is required"),
   source: z.enum(["WEBSITE", "WALKIN", "PARTNER", "REFERRAL", "OTHER"]).default("OTHER"),

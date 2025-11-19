@@ -45,3 +45,18 @@
 {"level":"info","message":"Refresh token successful","timestamp":"2025-11-19T13:01:16.596Z"}
 {"level":"info","message":"Fetching lead id=1","timestamp":"2025-11-19T13:05:19.679Z"}
 {"level":"info","message":"Updating lead id=1","timestamp":"2025-11-19T13:07:59.597Z"}
+{"level":"info","message":"Login attempt for email: ardhy@gmail.com","timestamp":"2025-11-19T13:23:53.137Z"}
+{"level":"info","message":"Login attempt: ardhy@gmail.com","timestamp":"2025-11-19T13:23:53.141Z"}
+{"level":"info","message":"Login successful: ardhy@gmail.com","timestamp":"2025-11-19T13:23:54.842Z"}
+{"level":"info","message":"Login successful for email: ardhy@gmail.com","timestamp":"2025-11-19T13:23:54.843Z"}
+{"level":"info","message":"Deleting lead id=1 by user=3","timestamp":"2025-11-19T13:25:11.264Z"}
+{"level":"info","message":"Lead creation request by user 3","timestamp":"2025-11-19T13:26:02.238Z"}
+{"level":"info","message":"Login attempt for email: monejer@mail.com","timestamp":"2025-11-19T13:26:28.274Z"}
+{"level":"info","message":"Login attempt: monejer@mail.com","timestamp":"2025-11-19T13:26:28.275Z"}
+{"level":"info","message":"Login successful: monejer@mail.com","timestamp":"2025-11-19T13:26:28.652Z"}
+{"level":"info","message":"Login successful for email: monejer@mail.com","timestamp":"2025-11-19T13:26:28.653Z"}
+{"level":"info","message":"Converting lead id=2 by user=2 (role: MANAGER)","timestamp":"2025-11-19T13:35:17.860Z"}
+{"level":"info","message":"Converting lead id=2 by user=2 (role: MANAGER)","timestamp":"2025-11-19T13:37:02.087Z"}
+{"level":"info","message":"Updating lead id=2","timestamp":"2025-11-19T13:38:03.402Z"}
+{"level":"info","message":"Converting lead id=2 by user=2 (role: MANAGER)","timestamp":"2025-11-19T13:38:11.562Z"}
+{"level":"info","message":"Lead 2 converted to customer 1","timestamp":"2025-11-19T13:38:12.421Z"}

@@ -22,7 +22,7 @@ router.get("/", controller.getAllLeads);
 router.get("/:id",  controller.getLeadById);
 router.patch("/:id", validate(updateLeadSchema), controller.updateLead);
 
-router.delete("/:id", validate(idParamSchema), controller.deleteLead);
+router.delete("/:id",  controller.deleteLead);
 
 // ==============================
 // Hanya MANAGER
@@ -31,7 +31,6 @@ router.delete("/:id", validate(idParamSchema), controller.deleteLead);
 router.post(
   "/:id/convert",
   roleMiddleware("MANAGER"),
-  validate(idParamSchema),
   controller.convertLead
 );
 

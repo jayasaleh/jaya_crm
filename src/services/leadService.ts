@@ -1,6 +1,7 @@
 import prisma from "../config/prisma";
 import ApiError from "../utils/apiError";
 import { logger } from "../config/logger";
+import { error } from "console";
 
 export async function createLead(data: any) {
   return prisma.lead.create({ data });
@@ -54,8 +55,8 @@ export async function convertLeadToCustomer(leadId: number, role: string) {
   const lead = await prisma.lead.findUnique({ where: { id: leadId } });
   if (!lead) throw new ApiError(404, "Lead not found");
 
-  if (lead.status === "CONVERTED") {
-    throw new ApiError(400, "Lead already converted");
+   if (lead.status !== "QUALIFIED") {
+    throw new ApiError(400, "Only QUALIFIED leads can be converted to customer");
   }
 
   // Buat customer
