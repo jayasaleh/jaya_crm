@@ -60,3 +60,15 @@
 {"level":"info","message":"Updating lead id=2","timestamp":"2025-11-19T13:38:03.402Z"}
 {"level":"info","message":"Converting lead id=2 by user=2 (role: MANAGER)","timestamp":"2025-11-19T13:38:11.562Z"}
 {"level":"info","message":"Lead 2 converted to customer 1","timestamp":"2025-11-19T13:38:12.421Z"}
+{"level":"info","message":"Login attempt for email: monejer@mail.com","timestamp":"2025-11-19T16:11:00.078Z"}
+{"level":"info","message":"Login attempt: monejer@mail.com","timestamp":"2025-11-19T16:11:00.082Z"}
+{"level":"info","message":"Login successful: monejer@mail.com","timestamp":"2025-11-19T16:11:00.488Z"}
+{"level":"info","message":"Login successful for email: monejer@mail.com","timestamp":"2025-11-19T16:11:00.488Z"}
+{"level":"info","message":"Product creation request by user 2","timestamp":"2025-11-19T16:11:13.886Z"}
+{"level":"info","message":"Creating product: Internet 100Mbps","timestamp":"2025-11-19T16:11:13.887Z"}
+{"level":"info","message":"Product creation request by user 2","timestamp":"2025-11-19T16:20:15.519Z"}
+{"level":"info","message":"Creating product: Internet 100Mbps","timestamp":"2025-11-19T16:20:15.519Z"}
+{"level":"info","message":"Product creation request by user 2","timestamp":"2025-11-19T16:22:02.195Z"}
+{"level":"info","message":"Creating product: Internet 100Mbps","timestamp":"2025-11-19T16:22:02.196Z"}
+{"level":"info","message":"Delete product request for ID 1","timestamp":"2025-11-19T16:23:18.422Z"}
+{"level":"info","message":"Deactivating product 1","timestamp":"2025-11-19T16:23:18.423Z"}
