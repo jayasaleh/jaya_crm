@@ -85,8 +85,8 @@ model Lead {
   name          String
   contact       String
   email         String?
-  address       String?          
-  needs         String?          
+  address       String          
+  needs         String          
   source        LeadSource        @default(OTHER)
   status        LeadStatus        @default(NEW)
   

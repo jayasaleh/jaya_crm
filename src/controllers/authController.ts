@@ -1,28 +1,44 @@
 import { Request, Response } from "express";
+import * as authService from "../services/authService";
+import { asyncHandler } from "../middleware/asyncHandler";
+import { logger } from "../config/logger"; // pastikan path sesuai
 
-import * as authService from "../services/auth.service";
-
-export async function register(req: Request, res: Response) {
+export const register = asyncHandler(async (req: Request, res: Response) => {
   const { name, email, password } = req.body;
+  logger.info(`Register request received for email: ${email}`);
+
   const result = await authService.registerUser({ name, email, password });
-  return res.status(201).json({ data: result });
-}
 
-export async function login(req: Request, res: Response) {
-  const { email, password } = req.body;
-  const result = await authService.loginUser(email, password);
-  return res.status(200).json({ data: result });
-}
+  logger.info(`Register successful for email: ${email}`);
+  res.status(201).json({ data: result });
+});
 
-export async function refresh(req: Request, res: Response) {
+export const login = asyncHandler(async (req: Request, res: Response) => {
+  const { email } = req.body;
+  logger.info(`Login attempt for email: ${email}`);
+
+  const result = await authService.loginUser(req.body.email, req.body.password);
+
+  logger.info(`Login successful for email: ${email}`);
+  res.status(200).json({ code: 200, status: "success", message: "Login successful", data: result });
+});
+
+export const refresh = asyncHandler(async (req: Request, res: Response) => {
   const { refreshToken } = req.body;
-  if (!refreshToken)
-    return res.status(400).json({ error: "refreshToken is required" });
-  const tokens = await authService.refreshTokens(refreshToken);
-  return res.status(200).json({ data: tokens });
-}
+  if (!refreshToken) {
+    logger.warn("Refresh token missing in request");
+    return res.status(400).json({ code: 400, status: "error", message: "refreshToken is required" });
+  }
 
-// export async function me(req: Request, res: Response) {
-//   // req.user is set by middleware
-//   return res.status(200).json({ data: req.user });
-// }
+  logger.info("Refresh token request received");
+  const tokens = await authService.refreshTokens(refreshToken);
+
+  logger.info("Refresh token successful");
+  res.status(200).json({ code: 200, status: "success", message: "Tokens refreshed successfully", data: tokens });
+});
+
+export const me = asyncHandler(async (req: Request, res: Response) => {
+    const user=(req as any).user;
+  logger.info(`Me endpoint accessed by user: ${user.email}`);
+  res.status(200).json({ code: 200, status: "success", message: "User updated successfully", data: user});
+});
