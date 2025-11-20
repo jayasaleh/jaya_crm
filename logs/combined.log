@@ -72,3 +72,22 @@
 {"level":"info","message":"Creating product: Internet 100Mbps","timestamp":"2025-11-19T16:22:02.196Z"}
 {"level":"info","message":"Delete product request for ID 1","timestamp":"2025-11-19T16:23:18.422Z"}
 {"level":"info","message":"Deactivating product 1","timestamp":"2025-11-19T16:23:18.423Z"}
+{"level":"info","message":"Login attempt for email: ardhy@gmail.com","timestamp":"2025-11-20T06:33:47.366Z"}
+{"level":"info","message":"Login attempt: ardhy@gmail.com","timestamp":"2025-11-20T06:33:47.370Z"}
+{"level":"info","message":"Login successful: ardhy@gmail.com","timestamp":"2025-11-20T06:33:48.860Z"}
+{"level":"info","message":"Login successful for email: ardhy@gmail.com","timestamp":"2025-11-20T06:33:48.861Z"}
+{"level":"info","message":"Fetching leads for user=3","timestamp":"2025-11-20T06:45:42.571Z"}
+{"level":"info","message":"Deal 1 created for customer 1 by user 3","timestamp":"2025-11-20T06:47:33.767Z"}
+{"level":"info","message":"Fetching deals for user 3 (SALES)","timestamp":"2025-11-20T08:03:11.912Z"}
+{"level":"info","message":"Fetching deal 1 by user 3","timestamp":"2025-11-20T08:07:19.268Z"}
+{"level":"info","message":"Login attempt for email: monejer@mail.com","timestamp":"2025-11-20T08:07:43.596Z"}
+{"level":"info","message":"Login attempt: monejer@mail.com","timestamp":"2025-11-20T08:07:43.597Z"}
+{"level":"info","message":"Login successful: monejer@mail.com","timestamp":"2025-11-20T08:07:43.922Z"}
+{"level":"info","message":"Login successful for email: monejer@mail.com","timestamp":"2025-11-20T08:07:43.922Z"}
+{"level":"info","message":"Approving deal 1 by manager 2","timestamp":"2025-11-20T08:11:14.987Z"}
+{"level":"info","message":"Rejecting deal 1 by manager 2","timestamp":"2025-11-20T09:04:49.148Z"}
+{"level":"info","message":"Login attempt for email: ardhy@gmail.com","timestamp":"2025-11-20T11:24:04.032Z"}
+{"level":"info","message":"Login attempt: ardhy@gmail.com","timestamp":"2025-11-20T11:24:04.035Z"}
+{"level":"info","message":"Login successful: ardhy@gmail.com","timestamp":"2025-11-20T11:24:04.391Z"}
+{"level":"info","message":"Login successful for email: ardhy@gmail.com","timestamp":"2025-11-20T11:24:04.392Z"}
+{"level":"info","message":"Fetching deals for user 3 (SALES)","timestamp":"2025-11-20T11:24:45.283Z"}
