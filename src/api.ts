@@ -1,4 +1,4 @@
-import app from "./be/src/index";
+import app from "./index";
 import { VercelRequest, VercelResponse } from "@vercel/node";
 
 export default (req: VercelRequest, res: VercelResponse) => {
