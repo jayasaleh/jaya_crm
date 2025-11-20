@@ -5,7 +5,6 @@ import { loginSchema, registerSchema } from "../schema/auth.schema";
 
 const authRoute = Router();
 
-authRoute.post("/register", validate(registerSchema), controller.register);
 authRoute.post("/login", validate(loginSchema), controller.login);
 authRoute.post("/refresh", controller.refresh);
 // router.get("/me", requireAuth, asyncHandler(controller.me));

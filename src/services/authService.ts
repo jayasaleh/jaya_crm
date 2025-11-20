@@ -5,48 +5,11 @@ import {
   verifyRefreshToken,
 } from "../utils/jwt";
 import prisma from "../config/prisma";
-import { Role } from "@prisma/client";
 import { logger } from "../config/logger"; 
 
 const SALT_ROUNDS = 10;
 
-export async function registerUser(input: {
-  name: string;
-  email: string;
-  password: string;
-  role?: string;
-}) {
-  logger.info(`Attempt to register user: ${input.email}`);
 
-  const existing = await prisma.user.findUnique({
-    where: { email: input.email },
-  });
-  if (existing) {
-    logger.warn(`Registration failed: email ${input.email} already registered`);
-    throw new Error("Email already registered");
-  }
-
-  const hashed = await bcrypt.hash(input.password, SALT_ROUNDS);
-  const user = await prisma.user.create({
-    data: {
-      name: input.name,
-      email: input.email,
-      password: hashed,
-      role: input.role as Role,
-    },
-  });
-
-  const accessToken = signAccessToken({ userId: user.id, role: user.role });
-  const refreshToken = signRefreshToken({ userId: user.id });
-
-  logger.info(`User registered successfully: ${input.email}`);
-
-  return {
-    user: { id: user.id, name: user.name, email: user.email, role: user.role },
-    accessToken,
-    refreshToken,
-  };
-}
 
 export async function loginUser(email: string, password: string) {
   logger.info(`Login attempt: ${email}`);

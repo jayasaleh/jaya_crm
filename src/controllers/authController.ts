@@ -3,16 +3,6 @@ import * as authService from "../services/authService";
 import { asyncHandler } from "../middleware/asyncHandler";
 import { logger } from "../config/logger"; // pastikan path sesuai
 
-export const register = asyncHandler(async (req: Request, res: Response) => {
-  const { name, email, password } = req.body;
-  logger.info(`Register request received for email: ${email}`);
-
-  const result = await authService.registerUser({ name, email, password });
-
-  logger.info(`Register successful for email: ${email}`);
-  res.status(201).json({ data: result });
-});
-
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const { email } = req.body;
   logger.info(`Login attempt for email: ${email}`);
