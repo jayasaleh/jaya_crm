@@ -31,6 +31,7 @@ export const getAllProducts = asyncHandler(async (_req: Request, res: Response) 
  * @GET /api/products/:id
  * @access All authenticated users
  */
+
 export const getProductById = asyncHandler(async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   if (isNaN(id) || id <= 0) {
@@ -67,7 +68,18 @@ export const deactivateProduct = asyncHandler(async (req: Request, res: Response
     throw new ApiError(400, "Invalid product ID");
   }
 
-  logger.info(`Delete product request for ID ${id}`);
+  logger.info(`Deactivate product request for ID ${id}`);
   await productService.deactivateProduct(id);
   res.json(new ApiResponse("Product deactivated successfully"));
 });
+
+export const deleteProduct = asyncHandler(async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  if (isNaN(id) || id <= 0) {
+    throw new ApiError(400, "Invalid product ID");
+  }
+
+  logger.info(`Delete product request for ID ${id}`);
+  await productService.deleteProduct(id);
+  res.json(new ApiResponse("Product deleted successfully"));
+})

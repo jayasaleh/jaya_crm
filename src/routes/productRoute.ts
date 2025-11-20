@@ -56,4 +56,11 @@ router.patch("/:id", validate(updateProductSchema), controller.updateProduct);
  */
 router.delete("/:id", controller.deactivateProduct);
 
+/**
+ * DELETE /api/products/:id/delete
+ * - Hapus produk secara permanen dari database
+ * - Hanya jika benar-benar diperlukan 
+ */
+router.delete("/:id/delete", controller.deleteProduct);
+
 export default router;

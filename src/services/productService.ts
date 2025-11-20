@@ -78,3 +78,9 @@ export async function deactivateProduct(id: number) {
     data: { isActive: false }, // ← perbaiki struktur
   });
 }
+export async function deleteProduct(id: number) {
+  logger.info(`Deleting product ${id}`);
+  return prisma.product.delete({
+    where: { id },
+  });
+}
