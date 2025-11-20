@@ -12,9 +12,12 @@ app.use(cors({
 
 app.use(express.json());
 app.use("/api", router);
-// Basic route
+
 app.get('/', (req, res) => {
   res.send('CRM PT. Smart is running!');
+});
+app.listen(process.env.PORT, () => {
+  console.log('server is running');
 });
 
 export default app;
