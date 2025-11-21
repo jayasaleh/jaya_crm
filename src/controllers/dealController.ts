@@ -8,7 +8,7 @@ import ApiError from "../utils/apiError";
 
 export const createDeal = asyncHandler(async (req: Request, res: Response) => {
   const user = (req as any).user;
-  const deal = await dealService.createDeal(user.id, req.body);
+  const deal = await dealService.createDeal(user.id, user.role, req.body);
   res.status(201).json(new ApiResponse("Deal created successfully", deal));
 });
 

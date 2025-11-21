@@ -5,6 +5,7 @@ import { Decimal } from "@prisma/client/runtime/library";
 
 export async function createDeal(
   userId: number,
+  role: string,
   data: {
     leadId?: number;
     customerId?: number;
@@ -27,7 +28,8 @@ export async function createDeal(
     if (lead.status !== "QUALIFIED") {
       throw new ApiError(400, "Only QUALIFIED leads can be converted to deal");
     }
-    if (lead.ownerId !== userId) {
+    // Manager bisa create deal dari lead siapa saja, Sales hanya dari lead mereka sendiri
+    if (role !== "MANAGER" && lead.ownerId !== userId) {
       throw new ApiError(403, "You can only create deal from your own leads");
     }
   }
@@ -136,15 +138,15 @@ export async function createDeal(
         customerId: customerInTx.id,
         ownerId: userId,
         title: data.title || `Deal for ${customerInTx.name}`,
-        totalAmount,
+        totalAmount: new Decimal(totalAmount),
         status: needsApproval ? "WAITING_APPROVAL" : "DRAFT",
         items: {
           create: validatedItems.map(item => ({
             productId: item.productId,
             quantity: item.quantity,
-            standardPrice: item.standardPrice,
-            agreedPrice: item.agreedPrice,
-            subtotal: item.subtotal,
+            standardPrice: new Decimal(item.standardPrice),
+            agreedPrice: new Decimal(item.agreedPrice),
+            subtotal: new Decimal(item.subtotal),
             needsApproval: item.needsApproval,
           })),
         },
@@ -156,6 +158,8 @@ export async function createDeal(
     if (needsApproval) {
       const approvalPromises = deal.items.map(async (item) => {
         if (item.needsApproval) {
+          const standardPriceNum = Number(item.standardPrice);
+          const agreedPriceNum = Number(item.agreedPrice);
           return tx.priceApproval.create({
             data: {
               dealId: deal.id,
@@ -163,7 +167,7 @@ export async function createDeal(
               requestedById: userId,
               requestedPrice: item.agreedPrice,
               standardPrice: item.standardPrice,
-              discountAmount: Number(item.standardPrice) - Number(item.agreedPrice),
+              discountAmount: new Decimal(standardPriceNum - agreedPriceNum),
               status: "PENDING",
             },
           });
@@ -342,6 +346,8 @@ export async function submitDeal(id: number, userId: number, role: string) {
       const approvalPromises = deal.items
         .filter(item => item.needsApproval)
         .map(item => {
+          const standardPriceNum = Number(item.standardPrice);
+          const agreedPriceNum = Number(item.agreedPrice);
           return tx.priceApproval.create({
             data: {
               dealId: deal.id,
@@ -349,7 +355,7 @@ export async function submitDeal(id: number, userId: number, role: string) {
               requestedById: userId,
               requestedPrice: item.agreedPrice,
               standardPrice: item.standardPrice,
-              discountAmount: Number(item.standardPrice) - Number(item.agreedPrice),
+              discountAmount: new Decimal(standardPriceNum - agreedPriceNum),
               status: "PENDING",
             },
           });
@@ -431,7 +437,7 @@ export async function activateDealServices(id: number, userId: number, role: str
         data: {
           customerId: deal.customerId!,
           productId: item.productId,
-          monthlyFee: item.agreedPrice,
+          monthlyFee: item.agreedPrice, // Already Decimal from database
           installationFee: null, // Bisa di-set kemudian jika perlu
           status: "ACTIVE",
           startDate: new Date(),
