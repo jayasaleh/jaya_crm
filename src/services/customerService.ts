@@ -5,10 +5,18 @@ import ApiError from "../utils/apiError";
 /**
  * Ambil semua customer aktif (yang punya minimal 1 Service aktif)
  */
-export async function getAllActiveCustomers(userId: number, role: string) {
+export async function getAllActiveCustomers(
+  userId: number,
+  role: string,
+  filters?: {
+    search?: string;
+    page?: number;
+    limit?: number;
+  }
+) {
   const customerWhere: any = {
     deals: {
-      some: { status: "APPROVED" }, // ← CUKUP approved!
+      some: { status: "APPROVED" },
     },
   };
 
@@ -21,7 +29,28 @@ export async function getAllActiveCustomers(userId: number, role: string) {
     };
   }
 
-  return prisma.customer.findMany({
+  // Search by name, customerCode, email, atau contact
+  if (filters?.search) {
+    customerWhere.OR = [
+      { name: { contains: filters.search, mode: "insensitive" } },
+      { customerCode: { contains: filters.search, mode: "insensitive" } },
+      { email: { contains: filters.search, mode: "insensitive" } },
+      { contact: { contains: filters.search, mode: "insensitive" } },
+    ];
+  }
+
+  // Pagination
+  const page = filters?.page || 1;
+  const limit = filters?.limit || 10;
+  const skip = (page - 1) * limit;
+
+  // Get total count for pagination
+  const total = await prisma.customer.count({
+    where: customerWhere,
+  });
+
+  // Get customers with pagination
+  const customers = await prisma.customer.findMany({
     where: customerWhere,
     include: {
       deals: {
@@ -34,7 +63,19 @@ export async function getAllActiveCustomers(userId: number, role: string) {
       }
     },
     orderBy: { createdAt: "desc" },
+    skip,
+    take: limit,
   });
+
+  return {
+    data: customers,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
 }
 /**
  * Ambil detail customer by ID + validasi akses

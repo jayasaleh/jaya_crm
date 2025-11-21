@@ -16,8 +16,15 @@ export const getAllDeals = asyncHandler(async (req: Request, res: Response) => {
   const user = (req as any).user;
   logger.info(`Fetching deals for user ${user.id} (${user.role})`);
 
-  const deals = await dealService.getAllDeals(user.id, user.role);
-  res.status(200).json(new ApiResponse("Deals fetched successfully", deals));
+  // Extract query params
+  const filters = {
+    status: req.query.status as string | undefined,
+    page: req.query.page ? Number(req.query.page) : undefined,
+    limit: req.query.limit ? Number(req.query.limit) : undefined,
+  };
+
+  const result = await dealService.getAllDeals(user.id, user.role, filters);
+  res.status(200).json(new ApiResponse("Deals fetched successfully", result));
 });
 
 /**

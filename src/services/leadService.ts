@@ -7,14 +7,65 @@ export async function createLead(data: any) {
   return prisma.lead.create({ data });
 }
 
-export async function getAllLeads(userId: number, role: string) {
-  if (role === "MANAGER") {
-    return prisma.lead.findMany({ orderBy: { id: "asc" } });
+export async function getAllLeads(
+  userId: number,
+  role: string,
+  filters?: {
+    status?: string;
+    source?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
   }
-  return prisma.lead.findMany({
-    where: { ownerId: userId },
-    orderBy: { id: "asc" },
+) {
+  // Base where clause
+  const where: any = role === "MANAGER" ? {} : { ownerId: userId };
+
+  // Filter by status
+  if (filters?.status) {
+    where.status = filters.status;
+  }
+
+  // Filter by source
+  if (filters?.source) {
+    where.source = filters.source;
+  }
+
+  // Search by name, contact, email, atau address
+  if (filters?.search) {
+    where.OR = [
+      { name: { contains: filters.search, mode: "insensitive" } },
+      { contact: { contains: filters.search, mode: "insensitive" } },
+      { email: { contains: filters.search, mode: "insensitive" } },
+      { address: { contains: filters.search, mode: "insensitive" } },
+    ];
+  }
+
+  // Pagination
+  const page = filters?.page || 1;
+  const limit = filters?.limit || 10;
+  const skip = (page - 1) * limit;
+
+  // Get total count for pagination
+  const total = await prisma.lead.count({ where });
+
+  // Get leads with pagination
+  const leads = await prisma.lead.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    skip,
+    take: limit,
   });
+
+  return {
+    data: leads,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
 }
 
 export async function getLeadById(id: number, userId: number, role: string) {

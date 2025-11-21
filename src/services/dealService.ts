@@ -181,9 +181,34 @@ export async function createDeal(
     return deal;
   });
 }
-export async function getAllDeals(userId: number, role: string) {
-  return prisma.deal.findMany({
-    where: role === "MANAGER" ? {} : { ownerId: userId },
+export async function getAllDeals(
+  userId: number,
+  role: string,
+  filters?: {
+    status?: string;
+    page?: number;
+    limit?: number;
+  }
+) {
+  // Base where clause
+  const where: any = role === "MANAGER" ? {} : { ownerId: userId };
+
+  // Filter by status
+  if (filters?.status) {
+    where.status = filters.status;
+  }
+
+  // Pagination
+  const page = filters?.page || 1;
+  const limit = filters?.limit || 10;
+  const skip = (page - 1) * limit;
+
+  // Get total count for pagination
+  const total = await prisma.deal.count({ where });
+
+  // Get deals with pagination
+  const deals = await prisma.deal.findMany({
+    where,
     include: {
       customer: { select: { name: true, customerCode: true } },
       owner: { select: { name: true, email: true } },
@@ -194,7 +219,19 @@ export async function getAllDeals(userId: number, role: string) {
       },
     },
     orderBy: { createdAt: "desc" },
+    skip,
+    take: limit,
   });
+
+  return {
+    data: deals,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
 }
 /**
  * Ambil detail deal by ID + validasi akses

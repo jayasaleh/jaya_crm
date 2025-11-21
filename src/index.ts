@@ -6,8 +6,20 @@ import cors from 'cors';
 dotenv.config();
 
 const app = express();
+// CORS configuration
+const allowedOrigins = [
+  'http://localhost:5173', // Local development
+  'http://localhost:3000',  // Alternative local port
+  process.env.FRONTEND_URL, // Frontend URL from environment variable
+].filter(Boolean); // Remove undefined values
+
 app.use(cors({
-  origin:['http://localhost:5173'], credentials:true
+  origin: allowedOrigins.length > 0 
+    ? allowedOrigins 
+    : true, // Allow all origins if no specific origin is set
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }))
 
 app.use(express.json());

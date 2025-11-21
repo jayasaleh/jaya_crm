@@ -12,8 +12,16 @@ import ApiError from "../utils/apiError";
  */
 export const getAllActiveCustomers = asyncHandler(async (req: Request, res: Response) => {
   const user = (req as any).user;
-  const customers = await customerService.getAllActiveCustomers(user.id, user.role);
-  res.json(new ApiResponse("Active customers fetched successfully", customers));
+  
+  // Extract query params
+  const filters = {
+    search: req.query.search as string | undefined,
+    page: req.query.page ? Number(req.query.page) : undefined,
+    limit: req.query.limit ? Number(req.query.limit) : undefined,
+  };
+
+  const result = await customerService.getAllActiveCustomers(user.id, user.role, filters);
+  res.status(200).json(new ApiResponse("Active customers fetched successfully", result));
 });
 
 /**
@@ -26,5 +34,5 @@ export const getActiveCustomerById = asyncHandler(async (req: Request, res: Resp
   if (isNaN(id) || id <= 0) throw new ApiError(400, "Invalid customer ID");
 
   const customer = await customerService.getActiveCustomerById(id, user.id, user.role);
-  res.json(new ApiResponse("Customer fetched successfully", customer));
+  res.status(200).json(new ApiResponse("Customer fetched successfully", customer));
 });

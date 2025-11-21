@@ -21,9 +21,18 @@ export const getAllLeads = asyncHandler(async (req: Request, res: Response) => {
   const user = (req as any).user;
   logger.info(`Fetching leads for user=${user.id}`);
 
-  const leads = await leadService.getAllLeads(user.id, user.role);
+  // Extract query params
+  const filters = {
+    status: req.query.status as string | undefined,
+    source: req.query.source as string | undefined,
+    search: req.query.search as string | undefined,
+    page: req.query.page ? Number(req.query.page) : undefined,
+    limit: req.query.limit ? Number(req.query.limit) : undefined,
+  };
 
-  res.status(200).json(new ApiResponse("Leads fetched successfully", leads));
+  const result = await leadService.getAllLeads(user.id, user.role, filters);
+
+  res.status(200).json(new ApiResponse("Leads fetched successfully", result));
 });
 
 export const getLeadById = asyncHandler(async (req: Request, res: Response) => {
