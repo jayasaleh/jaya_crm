@@ -449,11 +449,12 @@ export async function activateDealServices(id: number, userId: number, role: str
 
     const createdServices = await Promise.all(servicePromises);
 
-    logger.info(`Deal ${id} activated: ${createdServices.length} services created for customer ${deal.customerId}`);
-
-    // Return deal dengan services yang sudah dibuat
-    const updatedDeal = await tx.deal.findUnique({
+    // Update deal dengan activatedAt timestamp
+    const updatedDeal = await tx.deal.update({
       where: { id },
+      data: {
+        activatedAt: new Date(),
+      },
       include: {
         customer: {
           include: {
@@ -474,6 +475,8 @@ export async function activateDealServices(id: number, userId: number, role: str
         },
       },
     });
+
+    logger.info(`Deal ${id} activated: ${createdServices.length} services created for customer ${deal.customerId}`);
 
     return updatedDeal;
   });

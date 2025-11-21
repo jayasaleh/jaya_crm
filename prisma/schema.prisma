@@ -186,6 +186,7 @@ model Deal {
   submittedAt   DateTime?         // When submitted for approval
   approvedAt    DateTime?
   rejectedAt    DateTime?
+  activatedAt   DateTime?         // When services were activated
   
   notes         String?
   
