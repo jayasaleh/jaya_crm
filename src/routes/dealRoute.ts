@@ -16,7 +16,7 @@ router.patch("/:id/submit", controller.submitDeal);
 router.post("/:id/activate", controller.activateDeal);
 
 router.use(roleMiddleware("MANAGER"));
-router.patch("/:id/approve", controller.approveDeal);
-router.patch("/:id/reject", controller.rejectDeal);
+router.patch("/:id/approve", validate(approvalActionSchema), controller.approveDeal);
+router.patch("/:id/reject", validate(approvalActionSchema), controller.rejectDeal);
 
 export default router;

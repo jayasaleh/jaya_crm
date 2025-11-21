@@ -295,7 +295,7 @@ export async function approveDeal(id: number, managerId: number, note?: string) 
         data: {
         status: "APPROVED",
         approvedById: managerId,
-        decisionNote: note,
+        decisionNote: note || null,
         decidedAt: new Date(),
       },
     });
@@ -496,7 +496,7 @@ export async function rejectDeal(id: number, managerId: number, note?: string) {
         data: {
         status: "REJECTED",
         approvedById: managerId,
-        decisionNote: note,
+        decisionNote: note || null,
         decidedAt: new Date(),
       },
     });
