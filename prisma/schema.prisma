@@ -36,8 +36,6 @@ enum DealStatus {
   WAITING_APPROVAL
   APPROVED
   REJECTED
-  WON
-  LOST
 }
 
 enum ServiceStatus {
@@ -188,8 +186,6 @@ model Deal {
   submittedAt   DateTime?         // When submitted for approval
   approvedAt    DateTime?
   rejectedAt    DateTime?
-  wonAt         DateTime?
-  lostAt        DateTime?
   
   notes         String?
   

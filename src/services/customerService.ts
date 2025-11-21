@@ -44,7 +44,7 @@ export async function getActiveCustomerById(id: number, userId: number, role: st
     where: { id },
     include: {
       lead: { select: { ownerId: true } },
-      deals: { where: { status: "WON" }, select: { ownerId: true } },
+      deals: { where: { status: "APPROVED" }, select: { ownerId: true } },
       services: {
         where: { status: "ACTIVE" },
         include: {

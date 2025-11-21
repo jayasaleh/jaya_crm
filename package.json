@@ -14,9 +14,21 @@
   },
   "scripts": {
     "dev": "nodemon src/index.ts",
-      "build": "tsc && prisma generate",
-      "postinstall": "prisma generate",
-    "start": "node dist/index.js"
+    "build": "tsc && prisma generate",
+    "postinstall": "prisma generate",
+    "start": "node dist/index.js",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "migrate:status": "prisma migrate status",
+    "migrate:reset": "prisma migrate reset",
+    "migrate:seed": "prisma migrate dev && npm run seed",
+    "db:reset": "prisma migrate reset --skip-seed && npm run seed",
+    "db:setup": "prisma migrate deploy && npm run seed",
+    "prisma:studio": "prisma studio",
+    "seed": "ts-node prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
