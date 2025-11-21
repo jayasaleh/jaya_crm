@@ -12,6 +12,7 @@ router.use(requireAuth);
 router.post("/", validate(createDealSchema), controller.createDeal);
 router.get("/", controller.getAllDeals);
 router.get("/:id", controller.getDealById);
+router.patch("/:id/submit", validate(idParamSchema), controller.submitDeal);
 
 router.use(roleMiddleware("MANAGER"));
 router.patch("/:id/approve", validate(approvalActionSchema), controller.approveDeal);

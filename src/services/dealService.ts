@@ -85,7 +85,7 @@ export async function createDeal(
     totalAmount += subtotal;
   }
 
-  // 🔁 Mulai TRANSACTION
+  
   return prisma.$transaction(async (tx) => {
     let customerInTx = customer;
     let createdCustomer = false;
@@ -112,7 +112,7 @@ export async function createDeal(
       });
       createdCustomer = true;
 
-      // Update Lead status menjadi CONVERTED
+      // Update Lead statusCONVERTED
       await tx.lead.update({
         where: { id: data.leadId },
         data: {
@@ -238,6 +238,7 @@ export async function getDealById(id: number, userId: number, role: string) {
  * Manager: Approve deal
  */
 export async function approveDeal(id: number, managerId: number, note?: string) {
+  
   // Cek deal valid dan butuh approval
   const deal = await prisma.deal.findUnique({
     where: { id, status: "WAITING_APPROVAL" },
@@ -270,6 +271,78 @@ export async function approveDeal(id: number, managerId: number, note?: string) 
 }
 
 /**
+ * Sales: Submit deal for approval
+ * Update status DRAFT → WAITING_APPROVAL
+ */
+export async function submitDeal(id: number, userId: number, role: string) {
+  // Cek deal exists dan status = DRAFT
+  const deal = await prisma.deal.findUnique({
+    where: { id, status: "DRAFT" },
+    include: {
+      items: {
+        include: {
+          product: true,
+        },
+      },
+    },
+  });
+
+  if (!deal) {
+    throw new ApiError(400, "Deal not found or not in DRAFT status");
+  }
+
+  // Validasi akses: Sales hanya bisa submit deal miliknya
+  if (role !== "MANAGER" && deal.ownerId !== userId) {
+    throw new ApiError(403, "Access denied. You can only submit your own deals");
+  }
+
+  // Cek apakah ada item yang butuh approval
+  const hasItemsNeedingApproval = deal.items.some(item => item.needsApproval);
+
+  return prisma.$transaction(async (tx) => {
+    // Jika ada item yang butuh approval, buat PriceApproval records
+    if (hasItemsNeedingApproval) {
+      const approvalPromises = deal.items
+        .filter(item => item.needsApproval)
+        .map(item => {
+          return tx.priceApproval.create({
+            data: {
+              dealId: deal.id,
+              dealItemId: item.id,
+              requestedById: userId,
+              requestedPrice: item.agreedPrice,
+              standardPrice: item.standardPrice,
+              discountAmount: Number(item.standardPrice) - Number(item.agreedPrice),
+              status: "PENDING",
+            },
+          });
+        });
+
+      await Promise.all(approvalPromises);
+    }
+
+    // Update deal status ke WAITING_APPROVAL
+    const updatedDeal = await tx.deal.update({
+      where: { id },
+      data: {
+        status: "WAITING_APPROVAL",
+        submittedAt: new Date(),
+      },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+    });
+
+    logger.info(`Deal ${id} submitted for approval by user ${userId}`);
+    return updatedDeal;
+  });
+}
+
+/**
  * Manager: Reject deal
  */
 export async function rejectDeal(id: number, managerId: number, note?: string) {
@@ -293,7 +366,7 @@ export async function rejectDeal(id: number, managerId: number, note?: string) {
 
     return tx.deal.update({
       where: { id },
-        data: {
+      data: {
         status: "REJECTED",
         rejectedAt: new Date(),
       },

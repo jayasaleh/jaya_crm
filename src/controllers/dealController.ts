@@ -51,6 +51,21 @@ export const approveDeal = asyncHandler(async (req: Request, res: Response) => {
 });
 
 /**
+ * PATCH /api/deals/:id/submit
+ * @access Sales (hanya miliknya), Manager (semua)
+ */
+export const submitDeal = asyncHandler(async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const id = Number(req.params.id);
+  if (isNaN(id) || id <= 0) throw new ApiError(400, "Invalid deal ID");
+
+  logger.info(`Submitting deal ${id} by user ${user.id} (${user.role})`);
+
+  const submittedDeal = await dealService.submitDeal(id, user.id, user.role);
+  res.status(200).json(new ApiResponse("Deal submitted for approval successfully", submittedDeal));
+});
+
+/**
  * PATCH /api/deals/:id/reject
  * @access Manager only
  */
