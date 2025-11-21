@@ -3,45 +3,45 @@ import prisma from "../config/prisma";
 import ApiError from "../utils/apiError";
 import ExcelJS from "exceljs";
 
-export async function getSalesReport(startDate: Date, endDate: Date) {
-  // Normalisasi endDate ke akhir hari
-  const endOfDay = new Date(endDate);
-  endOfDay.setHours(23, 59, 59, 999);
+export async function getSalesReport(startDate?: Date, endDate?: Date) {
+  // Build where clause for date filtering
+  const dateFilter: any = {};
+  if (startDate && endDate) {
+    // Normalisasi endDate ke akhir hari
+    const endOfDay = new Date(endDate);
+    endOfDay.setHours(23, 59, 59, 999);
+    dateFilter.createdAt = { gte: startDate, lte: endOfDay };
+  }
 
   // 1. Hitung Lead
   const totalLeads = await prisma.lead.count({
-    where: {
-      createdAt: { gte: startDate, lte: endOfDay },
-    },
+    where: dateFilter,
   });
 
   const convertedLeads = await prisma.lead.count({
     where: {
-      createdAt: { gte: startDate, lte: endOfDay },
+      ...dateFilter,
       status: "CONVERTED",
     },
   });
 
   // 2. Hitung Deal (hanya APPROVED dianggap closing)
   const totalDeals = await prisma.deal.count({
-    where: {
-      createdAt: { gte: startDate, lte: endOfDay },
-    },
+    where: dateFilter,
   });
 
+  const approvedDealsWhere = {
+    ...dateFilter,
+    status: "APPROVED" as const,
+  };
+
   const approvedDeals = await prisma.deal.count({
-    where: {
-      createdAt: { gte: startDate, lte: endOfDay },
-      status: "APPROVED",
-    },
+    where: approvedDealsWhere,
   });
 
   // Total revenue dari deal yang APPROVED
   const revenueResult = await prisma.deal.aggregate({
-    where: {
-      createdAt: { gte: startDate, lte: endOfDay },
-      status: "APPROVED",
-    },
+    where: approvedDealsWhere,
     _sum: {
       totalAmount: true,
     },
@@ -50,14 +50,18 @@ export async function getSalesReport(startDate: Date, endDate: Date) {
   const totalRevenue = revenueResult._sum.totalAmount || 0;
 
   // 3. Produk Terlaris (dari DealItem di deal APPROVED)
+  const dealItemWhere: any = {
+    deal: {
+      status: "APPROVED",
+    },
+  };
+  if (dateFilter.createdAt) {
+    dealItemWhere.deal.createdAt = dateFilter.createdAt;
+  }
+
   const topProductsResult = await prisma.dealItem.groupBy({
     by: ["productId"],
-    where: {
-      deal: {
-        createdAt: { gte: startDate, lte: endOfDay },
-        status: "APPROVED",
-      },
-    },
+    where: dealItemWhere,
     _sum: {
       quantity: true,
       subtotal: true,
@@ -93,8 +97,8 @@ export async function getSalesReport(startDate: Date, endDate: Date) {
 
   return {
     period: {
-      startDate: startDate.toISOString().split("T")[0],
-      endDate: endDate.toISOString().split("T")[0],
+      startDate: startDate ? startDate.toISOString().split("T")[0] : "All Time",
+      endDate: endDate ? endDate.toISOString().split("T")[0] : "All Time",
     },
     summary: {
       totalLeads,
@@ -108,7 +112,10 @@ export async function getSalesReport(startDate: Date, endDate: Date) {
   };
 }
 
-export async function generateSalesReportExcel(startDate: Date, endDate: Date): Promise<Buffer> {
+export async function generateSalesReportExcel(startDate?: Date, endDate?: Date): Promise<Buffer> {
+  if (!startDate || !endDate) {
+    throw new ApiError(400, "startDate and endDate are required for Excel export");
+  }
   const report = await getSalesReport(startDate, endDate);
 
   const workbook = new ExcelJS.Workbook();

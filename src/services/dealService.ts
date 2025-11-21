@@ -453,7 +453,7 @@ export async function activateDealServices(id: number, userId: number, role: str
     const updatedDeal = await tx.deal.update({
       where: { id },
       data: {
-        activatedAt: new Date(),
+        activatedAt: new Date() as any, 
       },
       include: {
         customer: {

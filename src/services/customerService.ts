@@ -53,6 +53,13 @@ export async function getAllActiveCustomers(
   const customers = await prisma.customer.findMany({
     where: customerWhere,
     include: {
+      services: {
+        where: { status: "ACTIVE" },
+        include: {
+          product: true,
+        },
+        orderBy: { startDate: "desc" },
+      },
       deals: {
         where: { status: "APPROVED" },
         include: {
