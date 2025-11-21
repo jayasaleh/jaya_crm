@@ -66,6 +66,21 @@ export const submitDeal = asyncHandler(async (req: Request, res: Response) => {
 });
 
 /**
+ * POST /api/deals/:id/activate
+ * @access Sales (hanya miliknya), Manager (semua)
+ */
+export const activateDeal = asyncHandler(async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const id = Number(req.params.id);
+  if (isNaN(id) || id <= 0) throw new ApiError(400, "Invalid deal ID");
+
+  logger.info(`Activating deal ${id} by user ${user.id} (${user.role})`);
+
+  const activatedDeal = await dealService.activateDealServices(id, user.id, user.role);
+  res.status(200).json(new ApiResponse("Deal services activated successfully", activatedDeal));
+});
+
+/**
  * PATCH /api/deals/:id/reject
  * @access Manager only
  */

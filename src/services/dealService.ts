@@ -343,6 +343,100 @@ export async function submitDeal(id: number, userId: number, role: string) {
 }
 
 /**
+ * Activate Deal Services
+ * Create Service untuk setiap DealItem dari Deal yang sudah APPROVED
+ * @access Sales (hanya miliknya), Manager (semua)
+ */
+export async function activateDealServices(id: number, userId: number, role: string) {
+  // Cek deal exists dan status = APPROVED
+  const deal = await prisma.deal.findUnique({
+    where: { id, status: "APPROVED" },
+    include: {
+      customer: {
+        include: {
+          services: {
+            where: {
+              status: "ACTIVE",
+            },
+          },
+        },
+      },
+      items: {
+        include: {
+          product: true,
+        },
+      },
+    },
+  });
+
+  if (!deal) {
+    throw new ApiError(400, "Deal not found or not in APPROVED status");
+  }
+
+  // Validasi akses: Sales hanya bisa activate deal miliknya
+  if (role !== "MANAGER" && deal.ownerId !== userId) {
+    throw new ApiError(403, "Access denied. You can only activate your own deals");
+  }
+
+  // Validasi customer exists
+  if (!deal.customer) {
+    throw new ApiError(400, "Customer not found for this deal");
+  }
+
+  // Cek apakah sudah ada service aktif untuk customer ini (opsional check)
+  // Note: Bisa saja customer punya multiple deals, jadi kita tidak cek duplicate service
+  // Tapi kita bisa cek apakah deal ini sudah pernah di-activate dengan cara lain
+
+  return prisma.$transaction(async (tx) => {
+    // Create Service untuk setiap DealItem
+    const servicePromises = deal.items.map(item => {
+      return tx.service.create({
+        data: {
+          customerId: deal.customerId!,
+          productId: item.productId,
+          monthlyFee: item.agreedPrice,
+          installationFee: null, // Bisa di-set kemudian jika perlu
+          status: "ACTIVE",
+          startDate: new Date(),
+          installationAddress: deal.customer.address || null,
+          installationNotes: `Service activated from Deal ${deal.dealNumber}`,
+        },
+      });
+    });
+
+    const createdServices = await Promise.all(servicePromises);
+
+    logger.info(`Deal ${id} activated: ${createdServices.length} services created for customer ${deal.customerId}`);
+
+    // Return deal dengan services yang sudah dibuat
+    const updatedDeal = await tx.deal.findUnique({
+      where: { id },
+      include: {
+        customer: {
+          include: {
+            services: {
+              where: {
+                status: "ACTIVE",
+              },
+              include: {
+                product: true,
+              },
+            },
+          },
+        },
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+    });
+
+    return updatedDeal;
+  });
+}
+
+/**
  * Manager: Reject deal
  */
 export async function rejectDeal(id: number, managerId: number, note?: string) {
