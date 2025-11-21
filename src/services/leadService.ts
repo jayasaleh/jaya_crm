@@ -34,7 +34,7 @@ export async function updateLead(
   userId: number,
   role: string
 ) {
-  // Validasi akses & eksistensi
+
   await getLeadById(id, userId, role);
   return prisma.lead.update({ where: { id }, data });
 }
@@ -46,7 +46,7 @@ export async function deleteLead(id: number, userId: number, role: string) {
   return { message: "Lead deleted" };
 }
 
-// 🚀 Convert Lead → Customer (hanya MANAGER)
+// Convert Lead ke Customer (hanya MANAGER)
 export async function convertLeadToCustomer(leadId: number, role: string) {
   if (role !== "MANAGER") {
     throw new ApiError(403, "Only managers can convert leads");

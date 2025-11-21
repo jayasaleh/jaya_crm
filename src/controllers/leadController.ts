@@ -23,7 +23,7 @@ export const getAllLeads = asyncHandler(async (req: Request, res: Response) => {
 
   const leads = await leadService.getAllLeads(user.id, user.role);
 
-  res.json(new ApiResponse("Leads fetched successfully", leads));
+  res.status(200).json(new ApiResponse("Leads fetched successfully", leads));
 });
 
 export const getLeadById = asyncHandler(async (req: Request, res: Response) => {
@@ -34,7 +34,7 @@ export const getLeadById = asyncHandler(async (req: Request, res: Response) => {
 
   const lead = await leadService.getLeadById(id, user.id, user.role);
 
-  res.json(new ApiResponse("Lead fetched successfully", lead));
+  res.status(200).json(new ApiResponse("Lead fetched successfully", lead));
 });
 
 export const updateLead = asyncHandler(async (req: Request, res: Response) => {
@@ -45,7 +45,7 @@ export const updateLead = asyncHandler(async (req: Request, res: Response) => {
 
   const updated = await leadService.updateLead(id, req.body, user.id, user.role);
 
-  res.json(new ApiResponse("Lead updated successfully", updated));
+  res.status(200).json(new ApiResponse("Lead updated successfully", updated));
 });
 
 export const deleteLead = asyncHandler(async (req: Request, res: Response) => {
@@ -55,7 +55,7 @@ export const deleteLead = asyncHandler(async (req: Request, res: Response) => {
   logger.info(`Deleting lead id=${id} by user=${user.id}`);
   await leadService.deleteLead(id, user.id, user.role);
 
-  res.json(new ApiResponse("Lead deleted successfully"));
+  res.status(200).json(new ApiResponse("Lead deleted successfully"));
 });
 
 export const convertLead = asyncHandler(async (req: Request, res: Response) => {
@@ -66,5 +66,5 @@ export const convertLead = asyncHandler(async (req: Request, res: Response) => {
 
   const customer = await leadService.convertLeadToCustomer(id, user.role);
 
-  res.json(new ApiResponse("Lead converted to customer", customer));
+  res.status(200).json(new ApiResponse("Lead converted to customer", customer));
 });
