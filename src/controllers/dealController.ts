@@ -17,7 +17,7 @@ export const getAllDeals = asyncHandler(async (req: Request, res: Response) => {
   logger.info(`Fetching deals for user ${user.id} (${user.role})`);
 
   const deals = await dealService.getAllDeals(user.id, user.role);
-  res.json(new ApiResponse("Deals fetched successfully", deals));
+  res.status(200).json(new ApiResponse("Deals fetched successfully", deals));
 });
 
 /**
@@ -31,7 +31,7 @@ export const getDealById = asyncHandler(async (req: Request, res: Response) => {
 
   logger.info(`Fetching deal ${id} by user ${user.id}`);
   const deal = await dealService.getDealById(id, user.id, user.role);
-  res.json(new ApiResponse("Deal fetched successfully", deal));
+  res.status(200).json(new ApiResponse("Deal fetched successfully", deal));
 });
 
 /**
@@ -47,7 +47,7 @@ export const approveDeal = asyncHandler(async (req: Request, res: Response) => {
   logger.info(`Approving deal ${id} by manager ${user.id}`);
 
   const approvedDeal = await dealService.approveDeal(id, user.id, note);
-  res.json(new ApiResponse("Deal approved successfully", approvedDeal));
+  res.status(200).json(new ApiResponse("Deal approved successfully", approvedDeal));
 });
 
 /**
@@ -63,5 +63,5 @@ export const rejectDeal = asyncHandler(async (req: Request, res: Response) => {
   logger.info(`Rejecting deal ${id} by manager ${user.id}`);
 
   const rejectedDeal = await dealService.rejectDeal(id, user.id, note);
-  res.json(new ApiResponse("Deal rejected successfully", rejectedDeal));
+  res.status(200).json(new ApiResponse("Deal rejected successfully", rejectedDeal));
 });

@@ -6,16 +6,40 @@ import { Decimal } from "@prisma/client/runtime/library";
 export async function createDeal(
   userId: number,
   data: {
-    customerId: number;
+    leadId?: number;
+    customerId?: number;
     title?: string;
     items: { productId: number; agreedPrice: number; quantity: number }[];
   }
 ) {
-  // Validasi awal di luar transaction (boleh, karena hanya read)
-  const customer = await prisma.customer.findUnique({
-    where: { id: data.customerId },
-  });
-  if (!customer) throw new ApiError(404, "Customer not found");
+  // Validasi: minimal salah satu (leadId atau customerId) harus ada
+  if (!data.leadId && !data.customerId) {
+    throw new ApiError(400, "Either leadId or customerId must be provided");
+  }
+
+  // Jika leadId diberikan, validasi Lead
+  let lead = null;
+  if (data.leadId) {
+    lead = await prisma.lead.findUnique({
+      where: { id: data.leadId },
+    });
+    if (!lead) throw new ApiError(404, "Lead not found");
+    if (lead.status !== "QUALIFIED") {
+      throw new ApiError(400, "Only QUALIFIED leads can be converted to deal");
+    }
+    if (lead.ownerId !== userId) {
+      throw new ApiError(403, "You can only create deal from your own leads");
+    }
+  }
+
+  // Jika customerId diberikan, validasi Customer
+  let customer = null;
+  if (data.customerId) {
+    customer = await prisma.customer.findUnique({
+      where: { id: data.customerId },
+    });
+    if (!customer) throw new ApiError(404, "Customer not found");
+  }
 
   // Validasi produk & hitung data (pure logic)
   let totalAmount = 0;
@@ -63,16 +87,53 @@ export async function createDeal(
 
   // 🔁 Mulai TRANSACTION
   return prisma.$transaction(async (tx) => {
-    // Verifikasi ulang customer & produk dalam transaction (snapshot consistency)
-    const customerInTx = await tx.customer.findUnique({
-      where: { id: data.customerId },
-    });
-    if (!customerInTx) throw new ApiError(404, "Customer not found");
+    let customerInTx = customer;
+    let createdCustomer = false;
+
+    // Jika create dari Lead, auto-create Customer
+    if (data.leadId && lead) {
+      // Verifikasi ulang Lead dalam transaction
+      const leadInTx = await tx.lead.findUnique({
+        where: { id: data.leadId },
+      });
+      if (!leadInTx) throw new ApiError(404, "Lead not found");
+      if (leadInTx.status !== "QUALIFIED") {
+        throw new ApiError(400, "Lead status must be QUALIFIED");
+      }
+
+      // Auto-create Customer dari Lead
+      customerInTx = await tx.customer.create({
+        data: {
+          name: leadInTx.name,
+          contact: leadInTx.contact,
+          email: leadInTx.email || null,
+          address: leadInTx.address || null,
+        },
+      });
+      createdCustomer = true;
+
+      // Update Lead status menjadi CONVERTED
+      await tx.lead.update({
+        where: { id: data.leadId },
+        data: {
+          status: "CONVERTED",
+          customerId: customerInTx.id,
+          convertedAt: new Date(),
+        },
+      });
+    } else if (data.customerId) {
+      // Verifikasi ulang customer dalam transaction
+      customerInTx = await tx.customer.findUnique({
+        where: { id: data.customerId },
+      });
+      if (!customerInTx) throw new ApiError(404, "Customer not found");
+    }
 
     // Buat Deal
     const deal = await tx.deal.create({
       data: {
-        customerId: data.customerId,
+        leadId: data.leadId || null,
+        customerId: customerInTx.id,
         ownerId: userId,
         title: data.title || `Deal for ${customerInTx.name}`,
         totalAmount,
@@ -112,7 +173,11 @@ export async function createDeal(
       await Promise.all(approvalPromises);
     }
 
-    logger.info(`Deal ${deal.id} created for customer ${data.customerId} by user ${userId}`);
+    if (data.leadId) {
+      logger.info(`Deal ${deal.id} created from lead ${data.leadId} by user ${userId}. Customer ${customerInTx.id} auto-created.`);
+    } else {
+      logger.info(`Deal ${deal.id} created for customer ${data.customerId} by user ${userId}`);
+    }
     return deal;
   });
 }

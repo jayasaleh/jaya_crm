@@ -8,10 +8,17 @@ const dealItemSchema = z.object({
 });
 
 export const createDealSchema = z.object({
-  customerId: z.number().int().positive(),
+  leadId: z.number().int().positive().optional(),
+  customerId: z.number().int().positive().optional(),
   title: z.string().min(1).optional(),
   items: z.array(dealItemSchema).min(1, "At least one product is required"),
-});
+}).refine(
+  (data) => data.leadId || data.customerId,
+  {
+    message: "Either leadId or customerId must be provided",
+    path: ["leadId", "customerId"],
+  }
+);
 
 export const idParamSchema = z.object({
   id: z.string().regex(/^\d+$/, "ID must be a number"),
