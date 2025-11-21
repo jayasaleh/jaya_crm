@@ -10,6 +10,7 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:5173', // Local development
   'http://localhost:3000',  // Alternative local port
+  'https://jaya-crm-fe.vercel.app', // Production frontend
   process.env.FRONTEND_URL, // Frontend URL from environment variable
 ].filter(Boolean); // Remove undefined values
 
