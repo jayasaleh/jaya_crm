@@ -10,8 +10,12 @@ router.use(requireAuth);
 
 // JSON report (untuk API / frontend)
 router.get("/sales", controller.getSalesReport);
+router.get("/leads", controller.getLeadsReport);
+router.get("/customers", controller.getCustomersReport);
 
 // Excel report (untuk download)
 router.get("/sales.xlsx", controller.getSalesReportExcel);
+router.get("/leads.xlsx", controller.getLeadsReportExcel);
+router.get("/customers.xlsx", controller.getCustomersReportExcel);
 
 export default router;
